@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Щенок реагирует на курсор и ходит</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: sans-serif;
+      background-color: rgb(248, 219, 130);
+      overflow: hidden;
+      height: 100vh;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .wrapper {
+      position: absolute;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Маркеры (можно показать, если убрать d-none) */
+    .marker {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      position: absolute;
+      transition: 0.5s;
+      z-index: 100;
+      margin-top: -5px;
+      margin-left: -5px;
+    }
+    .red {
+      background-color: rgb(255, 64, 0);
+    }
+    .green {
+      background-color: rgb(42, 239, 190);
+    }
+    .blue {
+      background-color: rgb(0, 140, 255);
+    }
+    .d-none {
+      display: none;
+    }
+
+    .dog {
+      position: absolute;
+      width: calc(2 * 48px);
+      height: calc(2 * 48px);
+      animation: fade-in forwards 1s;
+      transition: 0.5s;
+      cursor: pointer;
+    }
+
+    @keyframes fade-in {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Тело */
+    .body-wrapper {
+      position: absolute;
+      width: calc(2 * 48px);
+      height: calc(2 * 48px);
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .body {
+      position: absolute;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAAwCAYAAACxIqevAAAAAXNSR0IArs4c6QAABSpJREFUeF7tm32a1CAMxqe30pvoAfRQegC9id5qfPBZlGELJOQL2nf/2t0pkPySvA20czzwAwIgAAJBBI6gdbEsCIAACDwgQEgCEACBMAIQoDD0WBgEQAAChBwAARB4fPv04UnF8PXnbzXdUJuIajyuAwEQWINAKTpffvwiG/X988d/10rFCAJExo4LQeA6BJL4cESn5XkSI4kIQYCuk1PwBARIBLTEJy8mESEIEClkuAgErkFAW3ykIgQBukZewQsQIBGAAJEw4SIQAAFtAlbiI+mC0AFpRxnzgcCiBCBAiwYGZvkRGL1vInmi4ufFnitBgPaMG6xWIJCFZ/ToN79jAiFSgF5N8Xw+yS8bzq5+HAdrV8W6eNYojLsvAarw1IQ0X3a7L/1XzyFAyIRbEdBq+dEVydNGKxYjS7jvBKEDGhHF59MEtO+4EKLpUPz9rtdo+zs/+/+RECANiphDTEBbfEqDIoQoFfDZudTZ/3vXZj/quVpjxIF4m+DyAjR6ulGDXPWQkerHqvZrJaxknlWTXepTGl/GPedK/b/0dy0oPYHJn1mK0KoxEW3BZr9NmwK5wiGjxP6czBF3Y0kheYz1SvacRx43g1okzkRjJDo9wcpxsRIhr5i4bcE0HeIaLS2i2SczvXU9faB2aT17LYvWcvt15pMH+1IYer9TOv16PGWMJOc1a5ViByceUx2QhUMcoykQWtdY2F52QxaFbSGYNR/u+xsRfCNvAL1znRzzUQd01uVQx6ya89IbAluAdizgMvDWTwI0hdRDeLSFyDI/RkWoyb5eSypAZdd6dmZkuQXzjgknDrcRIK8gcOD3CsrL3jMbJN1QpN3JF4ntI4Hb9XPvmHBq4BYC5BkADvzVtjHZHkkRe7Ju8ZPYv6vIrHQz49QAS4A8kotjPCVZPGwu7ZDa722vdhGvYL80BmdMemc1nEPl1lYsrdna5lHyHAIkpfQ2XjN5IopBan+EzZrbsBXsl8ZAIkC9s5zRgTMEaCAiHsmllTwetkqfALQS3fqgnHKvmN3GRHHX7EIhQJQMaV/DqWHyFswzsTgOtDB4v4uS7NCw25Nzi53Ujwj2HgJU82o9fm9tp9ABvc84CJBM7F9GSws3J250ByT1I1pEpfZHdUCKqfhuKq+YcNlfUoC8YFvcdSNsr7OVm0QrbiVnt5AtEaAeQvfOgPINJl/j+YVUr7zi5g4ESOm2wwXfS/TdO6CyCCN80YqFUmosMQ0EiBEGaQJ5wc4uSe0t0XjbfhaWnf3RtJ2Rsltcap1bM+zRASmkzgz43rLWiTJy2cKftKZHN6Rt+4jVbp/n95A0Y5GYp5+Z70FCgIQZZJHwkQJk4Y/HlkxSBMIU2HK4hhBpMIcACdNH+7CzLFavrsFiK9k749L0S6MIhCmw9fAZIdJkDgESpI9lt+ApRJoJRcVZfiVhZjsQYTPVtx2vK+Mxsn9mq9WaEwI0ot343EN8yqWlBVu7kQt4du8+ia07jFoEmgVg4QfmpBMgC1Ca0uNsQquwLd/G1bKRHqbXK6mF2pofBTxLHuO0CVxWgKzEMlp8tBMA84FAJIHLCpBFxwbxiUxVrH1FAiwBsijqEqpFgc+c8rfOS7B1uWIJwKdIApcXoAx35hAXT1oiUxNr34EAW4CsuiCL7qcVQOohLjqeO5QAfIwkMCVA2iLkKT6RsLE2CIDAK4FpAcoilKfjvky24nsoSA4QAAFfAiIBKk2lbmvyGGxvfAON1UBgRQJqArSic7AJBEBgbQJ/AOoMmm0ZeBaqAAAAAElFTkSuQmCC);
+      width: calc(2 * 6 * 48px);
+      height: calc(2 * 48px);
+      background-size: calc(2 * 6 * 48px) calc(2 * 48px) !important;
+      top: 0;
+      left: 0;
+    }
+
+    /* Голова */
+    .head-wrapper {
+      position: absolute;
+      top: 6px;
+      left: 16px;
+      width: calc(2 * 31px);
+      height: calc(2 * 32px);
+      overflow: hidden;
+      z-index: 1;
+      transition: 0.3s;
+    }
+
+    .head {
+      position: absolute;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALoAAAAgCAYAAACl82LUAAAAAXNSR0IArs4c6QAAA+hJREFUeF7tmtuV1DAMhiddQSdQABS1FACdQFezx4cVR2h1+X1LnJXnaSbjRLfPkhz7eOzP9kACDxwJbNwmbg88bgP6y5dPz++//txGdEo7PqKHwb4xnLfEbzGU9hMyA+wuwokPZJtExLZmxhtGr+xOXA9nFWDG2kLgoy2+RxhWbyITX6o6rkcU+1zCDqh0rnvOLPku2+7QEGjsf9Ul5QWvLzn3Zw6iL2MpI48Xll/tbFc7QAPG8b/f4aH3o5nUXoXJUrIg7THXru/Q5lh3egAUrNZaflQoRnrw8SiKnkEDvKrF0EFSou+Po1wvLcUSnY6UGL6zP2lRH5VjhN0BQsWIHjoZPloHV7SOpYAPshPfoi7wS5cdWqwoHMPeYF1yq9WvPXIohxOMmz+w9AIx4Y5NKBR6TCDH0kMxzhYxFqNS5JmQHroRAJ27cJm6WnGd2Q88vkpP68CYp5JKqAFCFg5lfCJ9uMrq0EvPYrQIoPBYFCzWZ84D2UyE9SEwQgFJ7Ps9PCz/6vyrQh7hp5JbqAFip4/7v7FyPgfAIBsQHzMInCY3GAiQgAAHxEEMqgaIyRHz+BzA40Oc2S4CX4AAAAASUVORK5CYII=);
+      width: calc(2 * 6 * 31px);
+      height: calc(2 * 32px);
+      background-size: calc(2 * 6 * 31px) calc(2 * 32px) !important;
+      top: 0;
+      left: 0;
+    }
+
+    /* Мордочка */
+    .face {
+      position: absolute;
+      width: calc(2 * 21px);
+      height: calc(2 * 22px);
+      top: 21px;
+      left: 18px;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALsAAAAgCAYAAACl82LUAAAABHNCSVQICAgIfAhkiAAAA6dJREFUeF7tmtuOw1AUhJHxooSADfAKVQgB3QCs0oyPLXTHZGT66m8sHXItbPgjb8TFL2JpKbdGIz+ZJ0kx+89b+1rFSAQ4cCWTfLN6DzhbA/cMSxhAZbHJ2Qev0uPN8dTv/3V44p3A8J+wUTW52FxFwToW/wlm9ZpKiWyUI8NiSlEGoFvAwUjjqUCdEGHLh3VnONJvHTA9wjxAZx2MnQvhVNC6guKZf5AC6uox+hyOlVwqcgZZpF0An3wUXS4gXs0hGtx5RXIvPYFlRw9FWqXCB4EaHk/N6UhLuYACFckrs8Dd/kBlcR3Z1Nl7G35hwefiQDX4EoQ6gxCqvZbn2s4Aq7HzwxE34UP8QnOqOL3a9XBXk2Qq5UgDTY6mXXDF3ACNCzuwf3QpQ11bhDQ5hh39qJff2wIHo7cpg7U3A2MFQD76vI6JTPPgoQNZ0Q8dBh7hgU0PPpIoSAj3sEV9gkgBiDh3bMQMz8Vtwd0PpgQkyDcB8pkLxC9wR6F99t9KgPAeg1VKxQQQBywBLAfGswLZ3voRvw1JhF1TwhbH9ozZ9PQiECb7fpCYvSFeYTAcwBMixlhxFGy2fX+Yc1xQ6ZfrSA3FY4gqCuyUPYu5IQx+kJu4zGrOGaBPeIFACJEmzgkAvBCuF7tqvcK8kYmNcS4RTAro+UR+Tqd1o2N53kJTbDDw35Tz16ZP5dSxv9vkMpeCSDAKcgC45rQGqAU9FJPlxxlnRJTiEAp+d9QQ5L9XkjSCwiMrTIE7VpFQEBVUXRGQcLgqqwZqv+4U8OsgigSg0KBli7MQ7gvw4NPKso+SAV+VCs7l4pKQQG9YJGZk6ej9+h6P7PgCiIHt0n+J6UKApMEfsoAEmtziOdg2bOuT66u3s5n04wIGRG18HQ7jG8jZAfF5mjw92RNOeT3kW7f84BWnWaeBJoEoGjxIAhIYMu5GzyOk73AGP42CGzcoDZ66uDJpQ+9xLVco7w+AEBcChEmS1AzbRY2bUl6AhJ1MgQIe1rH85/pgf3DYhsHt3y6hMDeDngFhxWgElJCZABAGT1NUTwt5JqAV80DmJkG7E86EIAhkANzEDhIA9JQX1/X+OdzZFCvSBDUkZJPnqSYLHX3WKa0YwA0Ql7nqJQmTzRJLp6kFev+x/c6bbfB3gkX0EK0L1+CEYBpU44KHINAzBhAFMUHP6EC6w6+8MrLTTF+weu2/sTrruQq+pUjAzo6bhSMKiTyh2Q+1HjgGLukcp57u+B3zQx6CrAHFojlKXbA6dBRqcwn/9KpRsAA3BxGQiKZhlnPBmEEZJ1qxGdCDELE9hz/rzPH86Bf8EYByAFJMDQ5xsoi81o5xfUpo/BrqDOeyjXwMhZ1sPYjBaEQrD7kiD8AU+FO/0Exg4Ec0NMHUmCxAAQXQpIGUCUGgcnhcDAzAYFElqBIpDnj6ccCR1O2TrBe/+rOmFG3FQcX37Ghx/sbW/vJy3f7uEozScMxTp02i6SpDYSw6HZpPb32dbMH77no7PnnA4jkkoNQdO5YLBpO7fgQfdrHqWhjoaPkjDHnvF8vUzHLOhJPxE/8lIBQCOHxQpRyQYMnMgGBwRTMxP31v+nXKuQGgyZ9CBGJiTtOXxHtA8CQ3EYpBHJK8EBGAyOdIMOSIQe5BnxE/TszHkU9vXq2qPK7pPN5MXPkLqyo2RkESLEqAEGq2QIpDr5O+MjW+dRTPQ/jIMiXIS9kCyBojD/kskGO0RMWVfmgQGDKc5pVx3ijGejNppfSuTj6s1RkQHA5KiS7OJ9iQYx6GA4rQ0WKgBP6TzIgMJIxoAIEoRczU8QHEoR9IMAKIpCQEZAKQoUJe8Qh4scfPzj/wPQF9+RId16bi0AAAAASUVORK5CYII=);
+      background-size: calc(2 * 21px) calc(2 * 22px) !important;
+      transition: 0.3s;
+      z-index: 2;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="dog" id="dog">
+      <div class="body-wrapper">
+        <div class="body" id="body"></div>
+      </div>
+      <div class="head-wrapper" id="head-wrapper">
+        <div class="head" id="head"></div>
+        <div class="face" id="face"></div>
+      </div>
+    </div>
+    <div class="marker red d-none" id="marker1"></div>
+    <div class="marker green d-none" id="marker2"></div>
+    <div class="marker blue d-none" id="marker3"></div>
+  </div>
+
+  <script>
+    // Находим элементы
+    const dog = document.getElementById("dog");
+    const body = document.getElementById("body");
+    const headWrapper = document.getElementById("head-wrapper");
+    const head = document.getElementById("head");
+    const face = document.getElementById("face");
+
+    // Константы для спрайтов
+    const bodySpriteCount = 6; // 6 кадров
+    const headSpriteCount = 6;
+
+    let bodyFrame = 0;
+    let headFrame = 0;
+
+    // Направления для тела и головы (0-5)
+    // 0 - право, 1 - вперед-вправо, 2 - вперед, 3 - вперед-влево, 4 - влево, 5 - назад
+    // Для упрощения будем считать, что:
+    // 0: 0px, 1: -48px, 2: -96px, 3: -144px, 4: -192px, 5: -240px смещение по X для тела
+    // Аналогично для головы (по 31px на кадр)
+
+    // Переменные для движения
+    let walkInterval = null;
+    let walking = false;
+    let walkDirection = 0; // индекс направления, от 0 до 5
+
+    // Функция установки кадра тела
+    function setBodyFrame(frame, direction) {
+      // frame от 0 до 5, direction от 0 до 5
+      const frameWidth = 48;
+      const offsetX = -direction * frameWidth * bodySpriteCount - frame * frameWidth;
+      body.style.backgroundPosition = `${offsetX}px 0`;
+    }
+
+    // Функция установки кадра головы и лица
+    function setHeadFrame(frame, direction) {
+      // Для головы ширина кадра 31px
+      const frameWidth = 31;
+      const offsetX = -direction * frameWidth * headSpriteCount - frame * frameWidth;
+      head.style.backgroundPosition = `${offsetX}px 0`;
+      face.style.backgroundPosition = `${offsetX}px 0`;
+    }
+
+    // Более простой способ: 
+    // В исходных данных спрайты имеют по 6 кадров движения в одном ряду
+    // Для направления будем менять background-position по X (каждый кадр - 48px у тела, 31px у головы)
+    // Учитывая что в спрайте по 6 кадров в строке, для разных направлений мы меняем background-position по Y (но в данном случае Y=0 всегда)
+    // Но в вашем спрайте все 6 кадров идут горизонтально в одну строку, а разные направления надо менять в другом ряду
+    // Ваш спрайт по факту в одном ряду с 6 кадрами. Если нужно менять направление - скорее всего в спрайте другая логика.
+
+    // Для упрощения мы будем менять backgroundPositionX для анимации ходьбы по 6 кадрам, а для направления - применим поворот самой собаки (dog) CSS трансформацией.
+
+    // Массив углов для направлений (шесть направлений, равномерно разнесенных по 360 градусам)
+    const directions = [0, 60, 120, 180, 240, 300];
+
+    // Функция поворота собаки и анимация спрайтов
+    function updateDog(directionAngle) {
+      // Поворот собаки по углу
+      dog.style.transform = `rotate(${directionAngle}deg)`;
+
+      // Анимация ходьбы (переход по кадрам спрайта)
+      setBodyFrame(bodyFrame, 0);
+      setHeadFrame(headFrame, 0);
+
+      bodyFrame = (bodyFrame + 1) % bodySpriteCount;
+      headFrame = (headFrame + 1) % headSpriteCount;
+    }
+
+    // Обработчик клика по собаке - запускает ходьбу в случайном направлении
+    dog.addEventListener("click", () => {
+      if (walking) {
+        clearInterval(walkInterval);
+        walking = false;
+        dog.style.animationPlayState = "paused";
+        return;
+      }
+      walking = true;
+      // Выбираем случайное направление из directions
+      walkDirection = directions[Math.floor(Math.random() * directions.length)];
+
+      // Запускаем анимацию ходьбы с интервалом
+      walkInterval = setInterval(() => {
+        updateDog(walkDirection);
+      }, 200);
+    });
+
+    // Обработчик движения мыши - собака поворачивает голову в сторону курсора
+    window.addEventListener("mousemove", (e) => {
+      if (walking) return; // не поворачиваем голову во время ходьбы
+
+      // Координаты центра собаки
+      const rect = dog.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      // Угол между центром собаки и курсором
+      const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+      const deg = angle * (180 / Math.PI);
+
+      // Поворот головы (в пределах от -45 до 45 градусов для естественного движения)
+      const limitedDeg = Math.max(-45, Math.min(45, deg));
+
+      headWrapper.style.transform = `rotate(${limitedDeg}deg)`;
+    });
+
+    // Начальное положение и кадры
+    dog.style.left = "50%";
+    dog.style.top = "50%";
+    dog.style.transformOrigin = "center center";
+    setBodyFrame(0, 0);
+    setHeadFrame(0, 0);
+  </script>
+</body>
+</html>
